@@ -165,3 +165,7 @@ type ReservedNodesFn func()
 
 // VictimTasksFn is the func declaration used to select victim tasks
 type VictimTasksFn func() []*TaskInfo
+
+type QueueReservedFn func(*QueueInfo,[]*QueueInfo,[]*NodeInfo) []*NodeInfo
+
+type ReserveQueuesFn func(*QueueInfo) []*NodeInfo

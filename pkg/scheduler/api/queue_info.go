@@ -17,6 +17,8 @@ limitations under the License.
 package api
 
 import (
+	v1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/resource"
 	"k8s.io/apimachinery/pkg/types"
 
 	"volcano.sh/apis/pkg/apis/scheduling"
@@ -33,6 +35,8 @@ type QueueInfo struct {
 
 	Weight int32
 
+	Guarantee v1.ResourceList
+
 	// Weights is a list of slash sperated float numbers.
 	// Each of them is a weight corresponding the
 	// hierarchy level.
@@ -46,10 +50,18 @@ type QueueInfo struct {
 
 // NewQueueInfo creates new queueInfo object
 func NewQueueInfo(queue *scheduling.Queue) *QueueInfo {
+	guarantee :=  v1.ResourceList{}
+	cpu := resource.NewQuantity(80,resource.BinarySI)
+	guarantee["cpu"] = *cpu
+	mem:= resource.NewQuantity(320, resource.DecimalSI)
+	guarantee["memory"] = *mem
+	gpu :=resource.NewScaledQuantity(3,0)
+	guarantee["nvidia.com/gpu"] = *gpu
+
 	return &QueueInfo{
 		UID:  QueueID(queue.Name),
 		Name: queue.Name,
-
+		Guarantee: guarantee,
 		Weight:    queue.Spec.Weight,
 		Hierarchy: queue.Annotations[v1beta1.KubeHierarchyAnnotationKey],
 		Weights:   queue.Annotations[v1beta1.KubeHierarchyWeightAnnotationKey],

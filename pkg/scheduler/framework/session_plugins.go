@@ -112,10 +112,6 @@ func (ssn *Session) AddTargetJobFn(name string, fn api.TargetJobFn) {
 	ssn.targetJobFns[name] = fn
 }
 
-// AddReservedNodesFn add reservedNodesFn function
-func (ssn *Session) AddReservedNodesFn(name string, fn api.ReservedNodesFn) {
-	ssn.reservedNodesFns[name] = fn
-}
 
 // AddVictimTasksFns add victimTasksFns function
 func (ssn *Session) AddVictimTasksFns(name string, fn api.VictimTasksFn) {
@@ -125,6 +121,33 @@ func (ssn *Session) AddVictimTasksFns(name string, fn api.VictimTasksFn) {
 // AddJobStarvingFns add jobStarvingFns function
 func (ssn *Session) AddJobStarvingFns(name string, fn api.ValidateFn) {
 	ssn.jobStarvingFns[name] = fn
+}
+
+// AddReservedNodesFn add reservedNodesFn function
+func (ssn *Session) AddReservedNodesFn(name string, fn api.ReservedNodesFn) {
+	ssn.reservedNodesFns[name] = fn
+}
+
+// AddQueueReservedFn add queueReservedFn function
+func (ssn *Session) AddQueueReservedFn(name string, fn api.QueueReservedFn) {
+	ssn.queueReservedFns[name] = fn
+}
+
+func (ssn *Session) AddReserveQueuesFn(name string, fn api.ReserveQueuesFn) {
+	ssn.reserveQueuesFns[name] = fn
+}
+
+func (ssn *Session) ReserveQueues(queueInfo *api.QueueInfo) []*api.NodeInfo{
+	for _, tier := range ssn.Tiers {
+		for _, plugin := range tier.Plugins {
+			fn, found := ssn.reserveQueuesFns[plugin.Name]
+			if !found {
+				continue
+			}
+			return fn(queueInfo)
+		}
+	}
+	return nil
 }
 
 // Reclaimable invoke reclaimable function of the plugins
@@ -434,6 +457,24 @@ func (ssn *Session) ReservedNodes() {
 			fn()
 		}
 	}
+}
+
+// QueueReservedNodes invoke QueueReservedNodes function of the plugins
+func (ssn *Session) QueueReservedNodes(queueInfo *api.QueueInfo,queueInfos []*api.QueueInfo,nodeInfos []*api.NodeInfo) []*api.NodeInfo {
+	for _, tier := range ssn.Tiers {
+		for _, plugin := range tier.Plugins {
+			if !isEnabled(plugin.EnableQueueReservedNodes) {
+				continue
+			}
+			fn, found := ssn.queueReservedFns[plugin.Name]
+			if !found {
+				continue
+			}
+
+			return fn(queueInfo,queueInfos,nodeInfos)
+		}
+	}
+	return nodeInfos
 }
 
 // JobOrderFn invoke joborder function of the plugins

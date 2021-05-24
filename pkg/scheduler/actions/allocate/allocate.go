@@ -212,6 +212,14 @@ func (alloc *Action) Execute(ssn *framework.Session) {
 				}
 			}
 
+			// If set queue reserved, return the nodes after queuereservedFn filtered
+			var queues []*api.QueueInfo
+			for _,queue:=range ssn.Queues {
+				queues = append(queues,queue)
+			}
+
+			candidateNodes = ssn.QueueReservedNodes(queue,queues,candidateNodes)
+
 			// If not candidate nodes for this task, skip it.
 			if len(candidateNodes) == 0 {
 				continue

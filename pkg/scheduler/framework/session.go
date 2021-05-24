@@ -76,6 +76,8 @@ type Session struct {
 	reservedNodesFns  map[string]api.ReservedNodesFn
 	victimTasksFns    map[string]api.VictimTasksFn
 	jobStarvingFns    map[string]api.ValidateFn
+	queueReservedFns  map[string]api.QueueReservedFn
+	reserveQueuesFns  map[string]api.ReserveQueuesFn
 }
 
 func openSession(cache cache.Cache) *Session {
